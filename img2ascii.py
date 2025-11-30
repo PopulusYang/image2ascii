@@ -68,10 +68,20 @@ def show(delay=0.02, skip=0):
         if skip > 0 and i % (skip + 1) != 0:
             continue
         full_path = os.path.normpath(os.path.join(charDirPath, txt))
+
+        # Clear screen and print content using Python directly
         if platform.system() == "Windows":
-            os.system(f'type "{full_path}"')
+            os.system("cls")
         else:
-            os.system(f'cat "{full_path}"')
+            os.system("clear")
+
+        try:
+            with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                sys.stdout.write(f.read())
+                sys.stdout.flush()
+        except Exception:
+            pass
+
         time.sleep(delay)
 
 

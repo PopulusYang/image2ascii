@@ -10,6 +10,18 @@ import platform
 import subprocess
 import json
 import math
+import sys
+
+# Handle CLI mode for packaged executable
+if len(sys.argv) > 1 and sys.argv[1] == "--play":
+    try:
+        delay = float(sys.argv[2])
+        skip = int(sys.argv[3])
+    except:
+        delay = 0.02
+        skip = 0
+    img2ascii.show(delay, skip)
+    sys.exit(0)
 
 CONFIG_FILE = "config.json"
 
@@ -280,7 +292,18 @@ def process_video():
                 pass
 
             # 在新终端窗口中启动
-            cmd_str = f"python img2ascii.py {delay} {skip}"
+            if getattr(sys, "frozen", False):
+                # Use player.exe which has console=True
+                base_dir = os.path.dirname(sys.executable)
+                player_exe = os.path.join(base_dir, "player.exe")
+                if not os.path.exists(player_exe):
+                    # Fallback to self if player.exe not found (though it might not show output)
+                    player_exe = sys.executable
+
+                cmd_str = f'"{player_exe}" --play {delay} {skip}'
+            else:
+                cmd_str = f"python img2ascii.py {delay} {skip}"
+
             if platform.system() == "Windows":
                 os.system(f"start cmd /k {cmd_str}")
             elif platform.system() == "Darwin":  # macOS
