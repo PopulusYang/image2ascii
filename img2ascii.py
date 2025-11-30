@@ -22,12 +22,17 @@ def LoadImg(i, j, picture, scale=6):
     return convert_img
 
 
-def genPics(progress_callback=None, scale=6):
+def genPics(progress_callback=None, scale=6, ascii_chars=None):
     vName = "output"
     picDirPath = "./imgout/"
     charDirPath = "./textout/"
     if not os.path.exists(charDirPath):
         os.makedirs(charDirPath)
+
+    if ascii_chars is None:
+        ascii_chars = [" ", "!", '"']
+
+    num_levels = len(ascii_chars)
 
     pics = [p for p in os.listdir(picDirPath) if p.endswith((".jpg", ".png", ".jpeg"))]
     try:
@@ -45,9 +50,12 @@ def genPics(progress_callback=None, scale=6):
         with open(os.path.join(charDirPath, vName + str(index) + ".txt"), "w") as f:
             for m in range(img.shape[0]):
                 for n in range(img.shape[1]):
-                    code = img[m][n]
-                    f.write(Ascii[int(code / 100)])
-                    f.write(Ascii[int(code / 100)])
+                    code = int(img[m][n])
+                    idx = int(code * num_levels / 256)
+                    if idx >= num_levels:
+                        idx = num_levels - 1
+                    f.write(ascii_chars[idx])
+                    f.write(ascii_chars[idx])
                 f.write("\n")
         index = index + 1
 
@@ -64,16 +72,19 @@ def show(delay=0.02, skip=0):
     except ValueError:
         pass
 
+    # Clear screen once before starting
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
+
     for i, txt in enumerate(txts):
         if skip > 0 and i % (skip + 1) != 0:
             continue
         full_path = os.path.normpath(os.path.join(charDirPath, txt))
 
-        # Clear screen and print content using Python directly
-        if platform.system() == "Windows":
-            os.system("cls")
-        else:
-            os.system("clear")
+        # Move cursor to top-left instead of clearing screen to prevent flickering
+        sys.stdout.write("\033[H")
 
         try:
             with open(full_path, "r", encoding="utf-8", errors="ignore") as f:

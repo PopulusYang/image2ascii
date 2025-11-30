@@ -60,6 +60,7 @@ translations = {
         "msg_high_res": "Scaled resolution ({}x{}) is high (>150x150).\nPlayback might not work properly.\n\nContinue?",
         "msg_error_cache": "Failed to clear cache: {}",
         "text_space": "Space",
+        "levels_label": "Levels:",
     },
     "zh_cn": {
         "title": "Image2Ascii 播放器",
@@ -95,6 +96,7 @@ translations = {
         "msg_high_res": "缩放后分辨率 ({}x{}) 过高 (>150x150)。\n播放可能无法正常进行。\n\n是否继续？",
         "msg_error_cache": "清理缓存失败: {}",
         "text_space": "空格",
+        "levels_label": "层级数:",
     },
     "zh_tw": {
         "title": "Image2Ascii 播放器",
@@ -130,6 +132,7 @@ translations = {
         "msg_high_res": "縮放後解析度 ({}x{}) 過高 (>150x150)。\n播放可能無法正常進行。\n\n是否繼續？",
         "msg_error_cache": "清理快取失敗: {}",
         "text_space": "空格",
+        "levels_label": "層級數:",
     },
 }
 
@@ -204,16 +207,12 @@ def process_video():
         scale = 6
 
     # 获取 ASCII 字符
-    c1 = entry_ascii_1.get()
-    c2 = entry_ascii_2.get()
-    c3 = entry_ascii_3.get()
-
     def parse_char(c):
         if c in ["Space", "空格", ""]:
             return " "
         return c[0] if len(c) > 0 else " "
 
-    current_ascii = [parse_char(c1), parse_char(c2), parse_char(c3)]
+    current_ascii = [parse_char(entry.get()) for entry in ascii_entries]
 
     if video_width > 0 and video_height > 0:
         scaled_w = int(video_width / scale)
@@ -270,7 +269,9 @@ def process_video():
                 # 3. 生成 ASCII (40% -> 95%)
                 lbl_status.config(text=get_text("status_generating"))
                 img2ascii.genPics(
-                    lambda c, t: update_progress(c, t, 40, 55), scale=scale
+                    lambda c, t: update_progress(c, t, 40, 55),
+                    scale=scale,
+                    ascii_chars=current_ascii,
                 )
 
             # 4. 播放
@@ -457,6 +458,7 @@ def update_ui_text():
         lbl_resolution.config(text=get_text("resolution"))
 
     lbl_ascii.config(text=get_text("ascii_label"))
+    lbl_levels.config(text=get_text("levels_label"))
     lbl_speed.config(text=get_text("speed_label"))
     lbl_scale.config(text=get_text("scale_label"))
     lbl_skip.config(text=get_text("skip_label"))
@@ -468,7 +470,7 @@ def update_ui_text():
     btn_clear.config(text=get_text("btn_clear"))
 
     # 如果包含本地化的空格文本，则更新 ASCII 输入框
-    for entry in [entry_ascii_1, entry_ascii_2, entry_ascii_3]:
+    for entry in ascii_entries:
         val = entry.get()
         if val in ["Space", "空格"]:
             entry.delete(0, tk.END)
@@ -566,26 +568,89 @@ def on_ascii_focus_out(event):
         widget.insert(0, get_text("text_space"))
 
 
-entry_ascii_1 = ttk.Entry(
-    ascii_inputs_frame, width=10, validate="key", validatecommand=vcmd
-)
-entry_ascii_1.pack(side=tk.LEFT, padx=5)
-entry_ascii_1.insert(0, get_text("text_space"))
-entry_ascii_1.bind("<FocusOut>", on_ascii_focus_out)
+# Levels control
+levels_frame = ttk.Frame(ascii_frame)
+levels_frame.pack(fill=tk.X, pady=5)
+lbl_levels = ttk.Label(levels_frame, text=get_text("levels_label"))
+lbl_levels.pack(side=tk.LEFT)
+var_levels = tk.IntVar(value=3)
 
-entry_ascii_2 = ttk.Entry(
-    ascii_inputs_frame, width=10, validate="key", validatecommand=vcmd
-)
-entry_ascii_2.pack(side=tk.LEFT, padx=5)
-entry_ascii_2.insert(0, "!")
-entry_ascii_2.bind("<FocusOut>", on_ascii_focus_out)
+ascii_entries = []
 
-entry_ascii_3 = ttk.Entry(
-    ascii_inputs_frame, width=10, validate="key", validatecommand=vcmd
+
+def update_ascii_entries(n):
+    # Clear existing
+    for widget in ascii_inputs_frame.winfo_children():
+        widget.destroy()
+    ascii_entries.clear()
+
+    # Default chars to cycle through
+    defaults = [
+        " ",
+        "!",
+        '"',
+        "#",
+        "$",
+        "%",
+        "&",
+        "'",
+        "(",
+        ")",
+        "*",
+        "+",
+        ",",
+        "-",
+        ".",
+        "/",
+        "0",
+        "1",
+        "2",
+        "3",
+    ]
+
+    for i in range(n):
+        entry = ttk.Entry(
+            ascii_inputs_frame, width=5, validate="key", validatecommand=vcmd
+        )
+        entry.pack(side=tk.LEFT, padx=2)
+
+        # Set default value
+        val = defaults[i % len(defaults)]
+        if val == " ":
+            val = get_text("text_space")
+
+        entry.insert(0, val)
+        entry.bind("<FocusOut>", on_ascii_focus_out)
+        ascii_entries.append(entry)
+
+
+def on_levels_change(*args):
+    try:
+        n = var_levels.get()
+        if n < 2:
+            n = 2
+        if n > 20:
+            n = 20
+        update_ascii_entries(n)
+    except:
+        pass
+
+
+spin_levels = ttk.Spinbox(
+    levels_frame,
+    from_=2,
+    to=20,
+    textvariable=var_levels,
+    width=5,
+    command=on_levels_change,
 )
-entry_ascii_3.pack(side=tk.LEFT, padx=5)
-entry_ascii_3.insert(0, '"')
-entry_ascii_3.bind("<FocusOut>", on_ascii_focus_out)
+spin_levels.pack(side=tk.LEFT, padx=5)
+spin_levels.bind("<Return>", lambda e: on_levels_change())
+spin_levels.bind("<FocusOut>", lambda e: on_levels_change())
+
+# Initialize
+update_ascii_entries(3)
+
 
 # 播放设置区域
 settings_frame = ttk.Labelframe(main_frame, text="Playback Settings", padding=10)
