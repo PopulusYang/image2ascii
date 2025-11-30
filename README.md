@@ -120,6 +120,8 @@ python img2ascii.py 0.03 1
 ![screenshot](./screenshot.png)
 ![screenshot2](./screenshot2.png)
 
+我是真爱粉（确信）
+
 ## ✨ 功能特性
 
 * **图形化界面**: 基于 `ttkbootstrap` 的现代化 GUI，操作简单，颜值在线。
