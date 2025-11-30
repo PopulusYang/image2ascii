@@ -3,3 +3,9 @@ __pycache__/
 imgout/*.jpg
 imgout/*.png
 textout/*.txt
+*.log
+.DS_Store
+*.ico
+build/
+dist/
+*.spec
