@@ -211,3 +211,9 @@ python img2ascii.py 0.03 1
 
 ---
 *Enjoy your ASCII movies!* 🎞️
+
+## 更新日志（changelog）
+Changelogs are written in Chinese.
+
+#### 2025/11/30 Bug修复：通过修改在控制台上的刷新方式修复频闪（Linux，MacOS运行效果未知）
+#### 2025/11/30 功能增加：增加颜色数值分级自定义，可让画面更细腻或更抽象
